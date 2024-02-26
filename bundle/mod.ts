@@ -1,10 +1,16 @@
-export { FluentBundle } from "./bundle.ts";
-export type { FluentVariable, TextTransform } from "./bundle.ts";
-export { FluentResource } from "./resource.ts";
+export type { Message } from "./ast.ts";
 export {
-  FluentType,
+  FluentBundle,
+  type FluentVariable,
+  type TextTransform,
+} from "./bundle.ts";
+export { FluentResource } from "./resource.ts";
+export type { Scope } from "./scope.ts";
+export {
+  FluentDateTime,
+  type FluentFunction,
   FluentNone,
   FluentNumber,
-  FluentDateTime,
+  FluentType,
+  type FluentValue,
 } from "./types.ts";
-export type { FluentValue, FluentFunction } from "./types.ts";

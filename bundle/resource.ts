@@ -1,20 +1,20 @@
 import {
-  Message,
-  PatternElement,
-  Literal,
-  SelectExpression,
-  Variant,
-  NamedArgument,
-  Expression,
-  Pattern,
-  VariableReference,
-  TermReference,
-  FunctionReference,
-  MessageReference,
-  Term,
   ComplexPattern,
+  Expression,
+  FunctionReference,
+  Literal,
+  Message,
+  MessageReference,
+  NamedArgument,
   NumberLiteral,
+  Pattern,
+  PatternElement,
+  SelectExpression,
   StringLiteral,
+  Term,
+  TermReference,
+  VariableReference,
+  Variant,
 } from "./ast.ts";
 
 // This regex is used to iterate through the beginnings of messages and terms.
@@ -69,6 +69,7 @@ const TOKEN_BLANK = /\s+/y;
  * Fluent Resource is a structure storing parsed localization entries.
  */
 export class FluentResource {
+  /** @ignore */
   public body: Array<Message | Term>;
 
   constructor(source: string) {
@@ -123,7 +124,7 @@ export class FluentResource {
     // (was the match found?) or, if errorClass is passed, as an assertion.
     function consumeChar(
       char: string,
-      errorClass?: typeof SyntaxError
+      errorClass?: typeof SyntaxError,
     ): boolean {
       if (source[cursor] === char) {
         cursor++;
@@ -139,7 +140,7 @@ export class FluentResource {
     // (was the match found?) or, if errorClass is passed, as an assertion.
     function consumeToken(
       re: RegExp,
-      errorClass?: typeof SyntaxError
+      errorClass?: typeof SyntaxError,
     ): boolean {
       if (test(re)) {
         cursor = re.lastIndex;
@@ -233,7 +234,7 @@ export class FluentResource {
     // Parse a complex pattern as an array of elements.
     function parsePatternElements(
       elements: Array<PatternElement | Indent> = [],
-      commonIndent: number
+      commonIndent: number,
     ): ComplexPattern {
       while (true) {
         if (test(RE_TEXT_RUN)) {
@@ -480,11 +481,11 @@ export class FluentResource {
         const [, codepoint4, codepoint6] = match(RE_UNICODE_ESCAPE);
         const codepoint = parseInt(codepoint4 || codepoint6, 16);
         return codepoint <= 0xd7ff || 0xe000 <= codepoint
-          ? // It's a Unicode scalar value.
-            String.fromCodePoint(codepoint)
-          : // Lonely surrogates can cause trouble when the parsing result is
-            // saved using UTF-8. Use U+FFFD REPLACEMENT CHARACTER instead.
-            "�";
+          // It's a Unicode scalar value.
+          ? String.fromCodePoint(codepoint)
+          // Lonely surrogates can cause trouble when the parsing result is
+          // saved using UTF-8. Use U+FFFD REPLACEMENT CHARACTER instead.
+          : "�";
       }
 
       throw new SyntaxError("Unknown escape sequence");

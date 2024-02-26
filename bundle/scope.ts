@@ -8,19 +8,25 @@ export class Scope {
   public errors: Array<Error> | null;
   /** A dict of developer-provided variables. */
   public args: Record<string, FluentVariable> | null;
-  /** The Set of patterns already encountered during this resolution.
-   * Used to detect and prevent cyclic resolutions. */
+  /**
+   * The Set of patterns already encountered during this resolution.
+   * Used to detect and prevent cyclic resolutions.
+   * @ignore
+   */
   public dirty: WeakSet<ComplexPattern> = new WeakSet();
   /** A dict of parameters passed to a TermReference. */
   public params: Record<string, FluentVariable> | null = null;
-  /** The running count of placeables resolved so far. Used to detect the
-   * Billion Laughs and Quadratic Blowup attacks. */
-  public placeables = 0;
+  /**
+   * The running count of placeables resolved so far.
+   * Used to detect the Billion Laughs and Quadratic Blowup attacks.
+   * @ignore
+   */
+  public placeables: number = 0;
 
   constructor(
     bundle: FluentBundle,
     errors: Array<Error> | null,
-    args: Record<string, FluentVariable> | null
+    args: Record<string, FluentVariable> | null,
   ) {
     this.bundle = bundle;
     this.errors = errors;
@@ -36,24 +42,25 @@ export class Scope {
 
   memoizeIntlObject(
     ctor: typeof Intl.NumberFormat,
-    opts: Intl.NumberFormatOptions
+    opts: Intl.NumberFormatOptions,
   ): Intl.NumberFormat;
   memoizeIntlObject(
     ctor: typeof Intl.DateTimeFormat,
-    opts: Intl.DateTimeFormatOptions
+    opts: Intl.DateTimeFormatOptions,
   ): Intl.DateTimeFormat;
   memoizeIntlObject(
     ctor: typeof Intl.PluralRules,
-    opts: Intl.PluralRulesOptions
+    opts: Intl.PluralRulesOptions,
   ): Intl.PluralRules;
   memoizeIntlObject(
     ctor:
       | typeof Intl.NumberFormat
       | typeof Intl.DateTimeFormat
       | typeof Intl.PluralRules,
-    opts: Intl.NumberFormatOptions &
-      Intl.DateTimeFormatOptions &
-      Intl.PluralRulesOptions
+    opts:
+      & Intl.NumberFormatOptions
+      & Intl.DateTimeFormatOptions
+      & Intl.PluralRulesOptions,
   ): Intl.NumberFormat | Intl.DateTimeFormat | Intl.PluralRules {
     let cache = this.bundle._intls.get(ctor);
     if (!cache) {

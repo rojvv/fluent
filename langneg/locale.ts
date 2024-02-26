@@ -1,3 +1,5 @@
+/* eslint no-magic-numbers: 0 */
+
 const languageCodeRe = "([a-z]{2,3}|\\*)";
 const scriptCodeRe = "(?:-([a-z]{4}|\\*))";
 const regionCodeRe = "(?:-([a-z]{2}|\\*))";
@@ -17,7 +19,7 @@ const variantCodeRe = "(?:-(([0-9][a-z0-9]{3}|[a-z0-9]{5,8})|\\*))";
  */
 const localeRe = new RegExp(
   `^${languageCodeRe}${scriptCodeRe}?${regionCodeRe}?${variantCodeRe}?$`,
-  "i"
+  "i",
 );
 
 export class Locale {

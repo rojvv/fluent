@@ -73,7 +73,7 @@ import { Locale } from "./locale.ts";
 export function filterMatches(
   requestedLocales: Array<string>,
   availableLocales: Array<string>,
-  strategy: string
+  strategy: string,
 ): Array<string> {
   const supportedLocales: Set<string> = new Set();
   const availableLocalesMap: Map<string, Locale> = new Map();

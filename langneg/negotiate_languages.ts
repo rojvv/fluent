@@ -28,7 +28,6 @@ export interface NegotiateLanguagesOptions {
  *         a string with BCP47 locale ID to be used
  *         as a last resort locale.
  *
- *
  * It returns an Array of strings with BCP47 locale IDs sorted according to the
  * user preferences.
  *
@@ -51,18 +50,18 @@ export interface NegotiateLanguagesOptions {
 export function negotiateLanguages(
   requestedLocales: Readonly<Array<string>>,
   availableLocales: Readonly<Array<string>>,
-  { strategy = "filtering", defaultLocale }: NegotiateLanguagesOptions = {}
+  { strategy = "filtering", defaultLocale }: NegotiateLanguagesOptions = {},
 ): Array<string> {
   const supportedLocales = filterMatches(
-    Array.from(Object(requestedLocales)).map(String),
-    Array.from(Object(availableLocales)).map(String),
-    strategy
+    Array.from(requestedLocales ?? []).map(String),
+    Array.from(availableLocales ?? []).map(String),
+    strategy,
   );
 
   if (strategy === "lookup") {
     if (defaultLocale === undefined) {
       throw new Error(
-        "defaultLocale cannot be undefined for strategy `lookup`"
+        "defaultLocale cannot be undefined for strategy `lookup`",
       );
     }
     if (supportedLocales.length === 0) {

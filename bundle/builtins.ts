@@ -12,15 +12,15 @@
  */
 
 import {
-  FluentValue,
+  FluentDateTime,
   FluentNone,
   FluentNumber,
-  FluentDateTime,
+  FluentValue,
 } from "./types.ts";
 
 function values(
   opts: Record<string, FluentValue>,
-  allowed: Array<string>
+  allowed: Array<string>,
 ): Record<string, unknown> {
   const unwrapped = Object.create(null) as Record<string, unknown>;
   for (const [name, opt] of Object.entries(opts)) {

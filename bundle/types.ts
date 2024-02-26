@@ -1,12 +1,10 @@
 import { Scope } from "./scope.ts";
 
-/* global Intl */
-
 export type FluentValue = FluentType<unknown> | string;
 
 export type FluentFunction = (
   positional: Array<FluentValue>,
-  named: Record<string, FluentValue>
+  named: Record<string, FluentValue>,
 ) => FluentValue;
 
 /**

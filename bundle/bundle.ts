@@ -1,15 +1,13 @@
 import { resolveComplexPattern } from "./resolver.ts";
 import { Scope } from "./scope.ts";
 import { FluentResource } from "./resource.ts";
-import { FluentValue, FluentNone, FluentFunction } from "./types.ts";
-import { Message, Term, Pattern } from "./ast.ts";
-import { NUMBER, DATETIME } from "./builtins.ts";
+import { FluentFunction, FluentNone, FluentValue } from "./types.ts";
+import { Message, Pattern, Term } from "./ast.ts";
+import { DATETIME, NUMBER } from "./builtins.ts";
 import { getMemoizerForLocale, IntlCache } from "./memoizer.ts";
 
 export type TextTransform = (text: string) => string;
-
-type NativeValue = string | number | Date;
-export type FluentVariable = FluentValue | NativeValue;
+export type FluentVariable = FluentValue | string | number | Date;
 
 /**
  * Message bundles are single-language stores of translation resources. They are
@@ -18,41 +16,38 @@ export type FluentVariable = FluentValue | NativeValue;
 export class FluentBundle {
   public locales: Array<string>;
 
+  /** @ignore */
   public _terms: Map<string, Term> = new Map();
+  /** @ignore */
   public _messages: Map<string, Message> = new Map();
+  /** @ignore */
   public _functions: Record<string, FluentFunction>;
+  /** @ignore */
   public _useIsolating: boolean;
+  /** @ignore */
   public _transform: TextTransform;
+  /** @ignore */
   public _intls: IntlCache;
 
   /**
    * Create an instance of `FluentBundle`.
    *
-   * The `locales` argument is used to instantiate `Intl` formatters used by
-   * translations. The `options` object can be used to configure the bundle.
+   * @example
+   * ```js
+   * let bundle = new FluentBundle(["en-US", "en"]);
    *
-   * Examples:
+   * let bundle = new FluentBundle(locales, {useIsolating: false});
    *
-   *     let bundle = new FluentBundle(["en-US", "en"]);
+   * let bundle = new FluentBundle(locales, {
+   *   useIsolating: true,
+   *   functions: {
+   *     NODE_ENV: () => process.env.NODE_ENV
+   *   }
+   * });
+   * ```
    *
-   *     let bundle = new FluentBundle(locales, {useIsolating: false});
-   *
-   *     let bundle = new FluentBundle(locales, {
-   *       useIsolating: true,
-   *       functions: {
-   *         NODE_ENV: () => process.env.NODE_ENV
-   *       }
-   *     });
-   *
-   * Available options:
-   *
-   *   - `functions` - an object of additional functions available to
-   *     translations as builtins.
-   *
-   *   - `useIsolating` - boolean specifying whether to use Unicode isolation
-   *     marks (FSI, PDI) for bidi interpolations. Default: `true`.
-   *
-   *   - `transform` - a function used to transform string parts of patterns.
+   * @param locales - Used to instantiate `Intl` formatters used by translations.
+   * @param options - Optional configuration for the bundle.
    */
   constructor(
     locales: string | Array<string>,
@@ -61,10 +56,17 @@ export class FluentBundle {
       useIsolating = true,
       transform = (v: string): string => v,
     }: {
+      /** Additional functions available to translations as builtins. */
       functions?: Record<string, FluentFunction>;
+      /**
+       * Whether to use Unicode isolation marks (FSI, PDI) for bidi interpolations.
+       *
+       * Default: `true`.
+       */
       useIsolating?: boolean;
+      /** A function used to transform string parts of patterns. */
       transform?: TextTransform;
-    } = {}
+    } = {},
   ) {
     this.locales = Array.isArray(locales) ? locales : [locales];
     this._functions = {
@@ -102,24 +104,30 @@ export class FluentBundle {
   /**
    * Add a translation resource to the bundle.
    *
-   * The translation resource must be an instance of `FluentResource`.
+   * @example
+   * ```js
+   * let res = new FluentResource("foo = Foo");
+   * bundle.addResource(res);
+   * bundle.getMessage("foo");
+   * // → {value: .., attributes: {..}}
+   * ```
    *
-   *     let res = new FluentResource("foo = Foo");
-   *     bundle.addResource(res);
-   *     bundle.getMessage("foo");
-   *     // → {value: .., attributes: {..}}
-   *
-   * Available options:
-   *
-   *   - `allowOverrides` - boolean specifying whether it's allowed to override
-   *     an existing message or term with a new value. Default: `false`.
-   *
-   * @param   res - FluentResource object.
-   * @param   options
+   * @param res
+   * @param options
    */
   addResource(
     res: FluentResource,
-    { allowOverrides = false }: { allowOverrides?: boolean } = {}
+    {
+      allowOverrides = false,
+    }: {
+      /**
+       * Boolean specifying whether it's allowed to override
+       * an existing message or term with a new value.
+       *
+       * Default: `false`.
+       */
+      allowOverrides?: boolean;
+    } = {},
   ): Array<Error> {
     const errors = [];
 
@@ -130,7 +138,7 @@ export class FluentBundle {
         // and cannot be retrieved from FluentBundle.
         if (allowOverrides === false && this._terms.has(entry.id)) {
           errors.push(
-            new Error(`Attempt to override an existing term: "${entry.id}"`)
+            new Error(`Attempt to override an existing term: "${entry.id}"`),
           );
           continue;
         }
@@ -138,7 +146,7 @@ export class FluentBundle {
       } else {
         if (allowOverrides === false && this._messages.has(entry.id)) {
           errors.push(
-            new Error(`Attempt to override an existing message: "${entry.id}"`)
+            new Error(`Attempt to override an existing message: "${entry.id}"`),
           );
           continue;
         }
@@ -160,26 +168,29 @@ export class FluentBundle {
    * reasons, the encountered errors are not returned but instead are appended
    * to the `errors` array passed as the third argument.
    *
-   *     let errors = [];
-   *     bundle.addResource(
-   *         new FluentResource("hello = Hello, {$name}!"));
-   *
-   *     let hello = bundle.getMessage("hello");
-   *     if (hello.value) {
-   *         bundle.formatPattern(hello.value, {name: "Jane"}, errors);
-   *         // Returns "Hello, Jane!" and `errors` is empty.
-   *
-   *         bundle.formatPattern(hello.value, undefined, errors);
-   *         // Returns "Hello, {$name}!" and `errors` is now:
-   *         // [<ReferenceError: Unknown variable: name>]
-   *     }
-   *
    * If `errors` is omitted, the first encountered error will be thrown.
+   *
+   * @example
+   * ```js
+   * let errors = [];
+   * bundle.addResource(
+   *     new FluentResource("hello = Hello, {$name}!"));
+   *
+   * let hello = bundle.getMessage("hello");
+   * if (hello.value) {
+   *     bundle.formatPattern(hello.value, {name: "Jane"}, errors);
+   *     // Returns "Hello, Jane!" and `errors` is empty.
+   *
+   *     bundle.formatPattern(hello.value, undefined, errors);
+   *     // Returns "Hello, {$name}!" and `errors` is now:
+   *     // [<ReferenceError: Unknown variable: name>]
+   * }
+   * ```
    */
   formatPattern(
     pattern: Pattern,
     args: Record<string, FluentVariable> | null = null,
-    errors: Array<Error> | null = null
+    errors: Array<Error> | null = null,
   ): string {
     // Resolve a simple pattern without creating a scope. No error handling is
     // required; by definition simple patterns don't have placeables.

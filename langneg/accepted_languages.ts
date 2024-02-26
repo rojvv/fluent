@@ -1,4 +1,4 @@
-export function acceptedLanguages(str = ""): Array<string> {
+export function acceptedLanguages(str: string = ""): Array<string> {
   if (typeof str !== "string") {
     throw new TypeError("Argument must be a string");
   }
